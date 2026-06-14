@@ -7,7 +7,7 @@ class BaseBankParser:
         """Инициализируем атрибуты класса: путь к файлу"""
         self.file_path = file_path
 
-    def _get_raw_text(self):
+    def _get_raw_text(self) -> str:
         """Получение и сохранение сырого текста со страниц файла"""
         text = ""
         with pdfplumber.open(self.file_path) as pdf:
@@ -26,8 +26,18 @@ class BaseBankParser:
 
 
 class TBankParser(BaseBankParser):
-    """"""
-    
+    """Модель Т-банка"""
+
+    def _process_text(self, text: str) -> list:
+        """Разрезаем текст на строки и выводим"""
+        lines = text.split("\n")
+        for line in lines:
+            print(line)
+
+        return []
+
+parser = TBankParser("data/test_bank.pdf")
+print(parser.parse())
 
 
 
