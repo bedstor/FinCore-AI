@@ -1,3 +1,5 @@
+from ast import pattern
+
 import pdfplumber
 import re
 
@@ -29,13 +31,28 @@ class BaseBankParser:
 class TBankParser(BaseBankParser):
     """Модель Т-банка"""
 
+    def make_pattern(self):
+        """Создание паттерна для нахождения данных"""
+        pattern = (
+            # Дата и время (всегда ЧЧ:ММ)
+            r"(?P<date_time>\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2})\s+"
+            # Дата учета (всегда ДД.ММ.ГГГГ)     
+            r"(?P<date_accounting>\d{2}\.\d{2}\.\d{4})\s+"
+            # Любые символы до начала суммы
+            r"(?P<description_operation>.+?)\s+"
+            # Сумма с пробелами в тысячах или без них + значок рубля
+            r"(?P<sum_value>[+-]?\d+(?:\s\d+)*\.\d{2})\s*₽?\s+"
+            r"(?P<remainder>\d+(?:\s\d+)*\.\d{2})" 
+)
+        return pattern
+    
     def _process_text(self, text: str) -> list:
         """
-        Разрезаем текст на строки
+        Обрабатываем сырой текст из файла, группируя по категориям
+        информацию из выписки и превращая данные в словарь.
         """
         lines = text.split("\n")
-        pattern = r"(?P<date>^\d{2}\.\d{2}\.\d{4})\s(?P<category>[А-Яа-яA-Za-z]+)\s"
-        pattern += r"(?P<sum>[+-]?\d+\.\d{2})\s(?P<description>\D[А-Яа-яA-Za-z]+$)"
+        pattern = self.make_pattern()
         result = []
         for line in lines:
             match = re.match(pattern, line)
@@ -47,9 +64,5 @@ class TBankParser(BaseBankParser):
         return result
             
 
-parser = TBankParser("data/test_bank.pdf")
+parser = TBankParser("data/t_bank_test.pdf")
 print(parser.parse())
-
-
-
-

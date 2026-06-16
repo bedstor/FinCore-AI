@@ -1,4 +1,4 @@
-# 🗺️ Архитектура платформы FinBrain
+# 🗺️ Архитектура платформы FinCore Ai
 
 ## 📥 1. Поток данных (Data Flow)
 User (PDF) ➡️ FastAPI (app/api/endpoints.py) ➡️ Parser (app/core/parser.py) ➡️ OpenAI (app/core/ai_advisor.py) ➡️ Pandas (app/core/analytics.py) ➡️ SQLite3 (app/database/models.py) ➡️ Plotly
