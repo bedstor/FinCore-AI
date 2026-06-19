@@ -1,5 +1,3 @@
-from ast import pattern
-
 import pdfplumber
 import re
 
@@ -34,35 +32,63 @@ class TBankParser(BaseBankParser):
     def make_pattern(self):
         """Создание паттерна для нахождения данных"""
         pattern = (
-            # Дата и время (всегда ЧЧ:ММ)
-            r"(?P<date_time>\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2})\s+"
-            # Дата учета (всегда ДД.ММ.ГГГГ)     
-            r"(?P<date_accounting>\d{2}\.\d{2}\.\d{4})\s+"
+            # Дата и время
+            r"(?P<date_time>\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2})[\s\n]*"
+            # Дата учета    
+            r"(?P<date_accounting>\d{2}\.\d{2}\.\d{4})[\s\n]*"
             # Любые символы до начала суммы
-            r"(?P<description_operation>.+?)\s+"
+            r"(?P<description_operation>.+?)[\s\n]*"
             # Сумма с пробелами в тысячах или без них + значок рубля
-            r"(?P<sum_value>[+-]?\d+(?:\s\d+)*\.\d{2})\s*₽?\s+"
+            r"(?P<sum_value>[+-]?\d+(?:\s\d+)*\.\d{2})\s*₽?[\s\n]*"
             r"(?P<remainder>\d+(?:\s\d+)*\.\d{2})" 
 )
         return pattern
     
     def _process_text(self, text: str) -> list:
         """
-        Обрабатываем сырой текст из файла, группируя по категориям
-        информацию из выписки и превращая данные в словарь.
+        Находим нужные данные по паттерну, группируем
+        и возвращаем их в виде пары "ключ - значение"
         """
-        lines = text.split("\n")
         pattern = self.make_pattern()
         result = []
-        for line in lines:
-            match = re.match(pattern, line)
-            if not match:
-                continue # Если None - пропускаем строку
+        for match in re.finditer(pattern, text):
             transaction_dict = match.groupdict()
             result.append(transaction_dict)
                 
         return result
-            
 
-parser = TBankParser("data/t_bank_test.pdf")
-print(parser.parse())
+
+class SberParser(BaseBankParser):
+    """Модель Сбер-банка"""
+
+    def make_pattern(self):
+        """Создание паттерна для нахождения данных"""
+        pattern = (
+            # Дата операции
+            r"(?P<date_operation>\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2})[\s\n]*"
+            # Дата обработки  
+            r"(?P<date_processing>\d{2}\.\d{2}\.\d{4})[\s\n]*"
+            # Любые символы до начала суммы
+            r"(?P<description_operation>.+?)[\s\n]*"
+            # Сумма с пробелами в тысячах или без них + значок рубля
+            r"(?P<sum_value>[+-]?\d+(?:\s\d+)*\,\d{2})\s*₽?[\s\n]*"
+            r"(?P<remainder>\d+(?:\s\d+)*\,\d{2})" 
+)
+        return pattern
+    
+    def _process_text(self, text: str) -> list:
+        """
+        Находим нужные данные по паттерну, группируем
+        и возвращаем их в виде пары "ключ - значение"
+        """
+        pattern = self.make_pattern()
+        result = []
+        for match in re.finditer(pattern, text):
+            transaction_dict = match.groupdict()
+            result.append(transaction_dict)
+        
+        return result
+
+sber = SberParser("data/sber_bank_test.pdf")
+print(sber.parse())
+
