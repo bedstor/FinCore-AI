@@ -74,13 +74,14 @@ class TBankParser(BaseBankParser):
 
         return re.compile(r"""
             # Дата и время операции
-            (?P<date_time>\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2})\s+
+            (?P<date_and_time>\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2})\s+
             # Дата учета    
             (?P<date_accounting>\d{2}\.\d{2}\.\d{4})\s+
             # Любые символы до начала суммы
             (?P<description_operation>.*?)\s+
-            # Сумма с пробелами в тысячах или без них + значок рубля
+            # Сумма
             (?P<sum_value>[+--—–]?\d+(?:\s\d+)*\.\d{2})\s*₽?\s+
+            # Остаток
             (?P<remainder>\d+(?:\s\d+)*\.\d{2}\s*₽?)
 """, re.VERBOSE | re.MULTILINE) 
 
@@ -96,13 +97,14 @@ class SberParser(BaseBankParser):
 
         return re.compile(r"""
             # Дата и время операции
-            (?P<date_time>\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2})\s+
+            (?P<date_and_time>\d{2}\.\d{2}\.\d{4}\s\d{2}:\d{2})\s+
             # Дата учета    
             (?P<date_accounting>\d{2}\.\d{2}\.\d{4})\s+
             # Любые символы до начала суммы
             (?P<description_operation>.*?)\s+
-            # Сумма с пробелами в тысячах или без них + значок рубля
+            # Сумма
             (?P<sum_value>[+--—–]?\d+(?:\s\d+)*\,\d{2})\s*₽?\s+
+            # Остаток
             (?P<remainder>\d+(?:\s\d+)*\,\d{2}\s*₽?)
 """, re.VERBOSE | re.MULTILINE) 
 
@@ -112,7 +114,8 @@ class AIBankParser(BaseBankParser):
     
     def _process_text(self, text: str):
         """
-        Отправялем сырой текст в ассинхронную функцию и получаем готовый список словарей
+        Отправялем сырой текст в ассинхронную функцию
+        и получаем готовый список словарей
         """
 
         print("Включаю ИИ-распознавание текста...")
@@ -120,5 +123,5 @@ class AIBankParser(BaseBankParser):
 
 factory = BankParserFactory("data/sber_bank_test.pdf")
 parser = factory.get_parse()
-print(parser.parse())
+print(parser._get_raw_text())
 
